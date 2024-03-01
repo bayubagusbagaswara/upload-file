@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Fund Template</title>
+    <style>
+        /*.table-container {*/
+            /*width: 600px;*/
+            /*border-collapse: collapse;*/
+            /*font-family: 'Arial', sans-serif;*/
+        /*}*/
+
+        .header-title {
+            text-align: center;
+            font-family: 'Times New Roman', sans-serif;
+        }
+
+        .column-title {
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-right {
+            text-align: right;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-center {
+            text-align: center;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-left {
+            text-align: left;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .value-bold {
+            font-weight: bold;
+        }
+
+        .column1 {
+            width: 250px;
+            text-align: left;
+            height: 25px;
+        }
+
+        .column2 {
+            width: 100px;
+            height: 25px;
+        }
+
+        .column3 {
+            width: 100px;
+            height: 25px;
+        }
+
+        .column4 {
+            width: 150px;
+            height: 25px;
+        }
+
+        /* Style for thead borders */
+        .table-container th {
+            border: 1px solid black;
+            padding: 8px; /* Adjust padding as needed */
+        }
+
+
+    </style>
+</head>
+<body>
+
+<h2>Data Tabel</h2>
+<div style="text-align: center;">
+    <table border="1" width="600px">
+        <!-- Header -->
+        <thead>
+        <tr>
+            <th class="header-title">Jenis Transaksi</th>
+            <th class="header-title">Value Frequency</th>
+            <th class="header-title">Tarif</th>
+            <th class="header-title">Amount Due</th>
+        </tr>
+        </thead>
+
+        <!-- Body -->
+        <tbody>
+        <tr>
+            <td class="column1 column-title">Accrual Biaya Kustodian</td>
+            <td class="column2"></td>
+            <td class="column3"></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${amountDueAccrualCustody}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title">Securities Transaction</td>
+            <td class="column2"></td>
+            <td class="column3"></td>
+            <td class="column4"></td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title">Biaya Online</td>
+            <td class="column2"></td>
+            <td class="column3"></td>
+            <td class="column4"></td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title">Biaya S4</td>
+            <td class="column2 cell-center" th:text="${valueFrequencyS4}"></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${s4Fee}"></td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${amountDueS4}">22.200,00</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title" colspan="3"><b>Total 1-4</b></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right value-bold" th:text="${totalNominalBeforeTax}">100.000,00</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title">Tax</td>
+            <td class="column2"></td>
+            <td class="column3 cell-center" th:text="${taxFee} + '%'"></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${amountDueTax}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title">Biaya KSEI</td>
+            <td class="column2 cell-center" th:text="${valueFrequencyKSEI}"></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${kseiFee}">23.000,00</td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${amountDueKsei}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="column1 column-title" colspan="3"><b>Total Keseluruhan Tagihan</b></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right value-bold" th:text="${totalAmountDue}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
