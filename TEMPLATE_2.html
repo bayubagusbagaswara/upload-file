@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Template 2</title>
+    <style>
+        .header-title {
+            text-align: center;
+            font-family: 'Times New Roman', sans-serif;
+        }
+
+        .column-title {
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-right {
+            text-align: right;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-center {
+            text-align: center;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .cell-left {
+            text-align: left;
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+        }
+
+        .value-bold {
+            font-weight: bold;
+        }
+
+        .column1 {
+            width: 250px;
+            text-align: left;
+            height: 25px;
+        }
+
+        .column2 {
+            width: 100px;
+            height: 25px;
+        }
+
+        .column3 {
+            width: 100px;
+            height: 25px;
+        }
+
+        .column4 {
+            width: 150px;
+            height: 25px;
+        }
+
+        /* Style for thead borders */
+        .table-container th {
+            border: 1px solid black;
+            padding: 8px; /* Adjust padding as needed */
+        }
+
+
+    </style>
+</head>
+<body>
+
+
+<h2>Data Tabel Template 2</h2>
+<div style="text-align: center;">
+    <table border="1" width="600px">
+        <!-- Header -->
+        <thead>
+        <tr>
+            <th class="header-title">Jenis Transaksi</th>
+            <th class="header-title">Value Frequency</th>
+            <th class="header-title">Tarif</th>
+            <th class="header-title">Amount Due</th>
+        </tr>
+        </thead>
+
+        <!-- Body -->
+        <tbody>
+
+        <!-- Safekeeping Fee -->
+        <tr>
+            <td class="column1 column-title">Safekeeping Fee</td>
+            <td class="column2">
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${safekeepingValueFrequency}"></td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-right" th:text="${safekeepingFee}">0.05</td>
+                        <td class="cell-left">p.a</td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${safekeepingAmountDue}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- VAT -->
+        <tr>
+            <td class="column1 column-title">VAT</td>
+            <td class="column2 cell-center"></td>
+            <td class="column3 cell-center" th:text="${vatFee}">
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${vatAmountDue}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- KSEI Fee - Transaction -->
+        <tr>
+            <td class="column1 column-title">KSEI Fee - Transaction</td>
+            <td class="column2 cell-center" th:text="${kseiTransactionValueFrequency}"></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${kseiTransactionFee}"></td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${kseiTransactionAmountDue}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- KSEI Fee - Safekeeping -->
+        <tr>
+            <td class="column1 column-title">KSEI fee - Safekeeping Fee</td>
+            <td class="column2 cell-center"></td>
+            <td class="cell-center">(as invoiced)</td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right" th:text="${kseiSafekeepingAmountDue}"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Total -->
+        <tr>
+            <td class="column1 column-title" colspan="3"><b>Total</b></td>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="cell-left">Rp.</td>
+                        <td class="cell-right value-bold" th:text="${totalAmountDue}">100.000,00</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
