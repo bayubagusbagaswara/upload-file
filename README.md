@@ -38,3 +38,9 @@ Melalui kenaikan suku bunga BI tentu akan membawa dampak pada perekonomian dan m
 
 “Adanya kenaikan suku bunga tentunya akan menyebabkan pergeseran minat masyarakat dari konsumsi ke saving, peningkatan suku bunga akan menarik minat masyarakat untuk lebih banyak menyimpan dananya di bank, hal tersebut tentu berdampak pada berkurangnya peredaran uang cash di pasar dipicu oleh tingkat suku bunga yang ada” ujar Professor Sri Subawa dalam wawancaranya.
 
+# Riwayat beli saham BBRI
+1. 5400
+2. 5300
+3. 5250
+4. 5000
+
