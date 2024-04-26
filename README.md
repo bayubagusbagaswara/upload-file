@@ -43,4 +43,5 @@ Melalui kenaikan suku bunga BI tentu akan membawa dampak pada perekonomian dan m
 2. 5300
 3. 5250
 4. 5000
+5. 4940
 
