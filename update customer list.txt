@@ -1,0 +1,22 @@
+{
+  "inputerId": "V00028732",
+  "inputerIPAddress": "10.151.50.122",
+  "customerDataListRequests": [
+    {
+      "Customer Code": "22PWBF",
+      "Billing Category": "CORE"
+    },
+    {
+      "Customer Code": "21SMUN",
+      "Billing Type": "TYPE_6"
+    },
+    {
+      "Customer Code": "22SMBK",
+      "Currency": "USD"
+    },
+    {
+      "Customer Code": "15JATJ",
+      "Billing Template": "CORE_TEMPLATE_3"
+    }
+  ]
+}
