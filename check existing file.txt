@@ -1,0 +1,114 @@
+// Hapus semua file dalam folder jika ada
+try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folderPathObj)) {
+    for (Path path : directoryStream) {
+        Files.delete(path);
+    }
+}
+
+private void generateAndSavePdfStatements(List<BillingFund> billingFundList) {
+    log.info("Start generate and save pdf statements Billing Fund size: {}", billingFundList.size());
+    Instant dateNow = Instant.now();
+    List<BillingFundDTO> billingFundDTOList = billingFundMapper.mapToDTOList(billingFundList);
+
+    for (BillingFundDTO fundDTO : billingFundDTOList) {
+        log.info("Start generate PDF Billing Fund type '{}' and customer code '{}'", fundDTO.getBillingType(), fundDTO.getCustomerCode());
+
+        BillingReportGenerator billingReportGenerator = new BillingReportGenerator();
+        String investmentManagementName = fundDTO.getInvestmentManagementName();
+        String investmentManagementEmail = fundDTO.getInvestmentManagementEmail();
+        String investmentManagementUniqueKey = fundDTO.getInvestmentManagementUniqueKey();
+        String customerCode = fundDTO.getCustomerCode();
+        String customerName = fundDTO.getCustomerName();
+        String billingCategory = fundDTO.getBillingCategory();
+        String billingType = fundDTO.getBillingType();
+        String billingPeriod = fundDTO.getBillingPeriod();
+        String currency = fundDTO.getCurrency();
+        String billingNumber = fundDTO.getBillingNumber();
+
+        Map<String, String> monthYearMap;
+        String yearMonthFormat;
+        String htmlContent;
+        byte[] pdfBytes;
+        String fileName;
+        String filePath;
+        String folderPath;
+        String outputPath;
+
+        monthYearMap = convertDateUtil.extractMonthYearInformation(fundDTO.getBillingPeriod());
+
+        int year = Integer.parseInt(monthYearMap.get("year"));
+        String monthName = monthYearMap.get("monthName");
+
+        yearMonthFormat = year + monthYearMap.get("monthValue");
+
+        fileName = generateFileName(billingNumber);
+
+        folderPath = basePathBillingFund + yearMonthFormat + "/" + investmentManagementName;
+
+        filePath = folderPath + "/" + fileName;
+
+        try {
+            // Buat direktori jika belum ada
+            Path folderPathObj = Paths.get(folderPath);
+            Files.createDirectories(folderPathObj);
+
+            // Hapus semua file dalam folder jika ada
+            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folderPathObj)) {
+                for (Path path : directoryStream) {
+                    Files.delete(path);
+                }
+            }
+
+            // Generate PDF
+            htmlContent = renderThymeleafTemplate(fundDTO);
+            pdfBytes = pdfGenerator.generatePdfFromHtml(htmlContent);
+
+            // Simpan PDF
+            Path outputPathObj = folderPathObj.resolve(fileName);
+            outputPath = outputPathObj.toString();
+            pdfGenerator.savePdfToFile(pdfBytes, outputPath);
+
+            // Update status dan simpan ke database
+            billingReportGeneratorService.checkingExistingBillingReportGenerator(
+                    customerCode, billingCategory, billingType, currency, billingPeriod
+            );
+
+            billingReportGenerator.setCreatedAt(dateNow);
+            billingReportGenerator.setInvestmentManagementName(investmentManagementName);
+            billingReportGenerator.setInvestmentManagementEmail(investmentManagementEmail);
+            billingReportGenerator.setInvestmentManagementUniqueKey(investmentManagementUniqueKey);
+            billingReportGenerator.setCustomerCode(customerCode);
+            billingReportGenerator.setCustomerName(customerName);
+            billingReportGenerator.setType(billingType);
+            billingReportGenerator.setCategory(billingCategory);
+            billingReportGenerator.setPeriod(billingPeriod);
+            billingReportGenerator.setMonth(monthName);
+            billingReportGenerator.setYear(year);
+            billingReportGenerator.setCurrency(currency);
+            billingReportGenerator.setFileName(fileName);
+            billingReportGenerator.setFilePath(filePath);
+            billingReportGenerator.setStatus(ReportGeneratorStatus.SUCCESS.getStatus());
+            billingReportGenerator.setDesc("Success generate and save PDF statements");
+
+            billingReportGeneratorService.saveSingleData(billingReportGenerator);
+        } catch (Exception e) {
+            log.error("Error creating folder or saving PDF : " + e.getMessage(), e);
+            billingReportGenerator.setCreatedAt(dateNow);
+            billingReportGenerator.setInvestmentManagementName(investmentManagementName);
+            billingReportGenerator.setInvestmentManagementEmail(investmentManagementEmail);
+            billingReportGenerator.setInvestmentManagementUniqueKey(investmentManagementUniqueKey);
+            billingReportGenerator.setCustomerCode(customerCode);
+            billingReportGenerator.setCustomerName(customerName);
+            billingReportGenerator.setCategory(billingCategory);
+            billingReportGenerator.setType(billingType);
+            billingReportGenerator.setPeriod(billingPeriod);
+            billingReportGenerator.setCurrency(currency);
+            billingReportGenerator.setFileName(fileName);
+            billingReportGenerator.setFilePath(folderPath);
+            billingReportGenerator.setStatus(ReportGeneratorStatus.FAILED.getStatus());
+            billingReportGenerator.setDesc(e.getMessage());
+
+            billingReportGeneratorService.saveSingleData(billingReportGenerator);
+        }
+    }
+}
