@@ -45,3 +45,85 @@ Melalui kenaikan suku bunga BI tentu akan membawa dampak pada perekonomian dan m
 4. 5000
 5. 4940
 
+# Booking Meeting Room
+
+<dependency>
+  <groupId>com.google.api-client</groupId>
+  <artifactId>google-api-client</artifactId>
+  <version>1.32.1</version>
+</dependency>
+<dependency>
+  <groupId>com.google.oauth-client</groupId>
+  <artifactId>google-oauth-client-jetty</artifactId>
+  <version>1.32.1</version>
+</dependency>
+<dependency>
+  <groupId>com.google.apis</groupId>
+  <artifactId>google-api-services-calendar</artifactId>
+  <version>v3-rev305-1.25.0</version>
+</dependency>
+
+Buat file konfigurasi application.properties atau application.yml dengan detail OAuth2
+spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.scope=openid, profile, email, https://www.googleapis.com/auth/calendar
+spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
+spring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/auth
+spring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token
+spring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo
+
+Buat service yang akan mengatur integrasi dengan Google Calendar:
+@Service
+public class GoogleCalendarService {
+    private static final String APPLICATION_NAME = "Google Calendar API Spring Boot";
+    private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+
+    private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/calendar");
+    private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
+
+    private final String clientId;
+    private final String clientSecret;
+
+    public GoogleCalendarService(@Value("${spring.security.oauth2.client.registration.google.client-id}") String clientId,
+                                 @Value("${spring.security.oauth2.client.registration.google.client-secret}") String clientSecret) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
+
+    private Credential getCredentials() throws IOException, GeneralSecurityException {
+        InputStream in = GoogleCalendarService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .setAccessType("offline")
+                .build();
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+
+    public List<Event> getUpcomingEvents() throws IOException, GeneralSecurityException {
+        Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, getCredentials())
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        Events events = service.events().list("primary")
+                .setMaxResults(10)
+                .setOrderBy("startTime")
+                .setSingleEvents(true)
+                .execute();
+        return events.getItems();
+    }
+
+    public String createEvent(Event event) throws IOException, GeneralSecurityException {
+        Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, getCredentials())
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        event = service.events().insert("primary", event).execute();
+        return event.getHtmlLink();
+    }
+}
+
+
