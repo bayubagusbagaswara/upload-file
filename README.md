@@ -257,3 +257,319 @@ public class MeetingRoomController {
 }
 
 Endpoint /api/meetings/events dapat dipanggil oleh klien (misalnya, aplikasi web atau mobile) untuk mendapatkan daftar acara yang akan datang dari Google Calendar pengguna.
+
+# OAuth2
+
+Untuk mengatur Google OAuth2 dalam aplikasi Spring Boot, Anda perlu mengikuti beberapa langkah utama: mendapatkan kredensial OAuth2 dari Google API Console, mengkonfigurasi aplikasi Spring Boot Anda untuk menggunakan OAuth2, dan menyiapkan endpoint untuk mengelola proses otentikasi. Berikut ini adalah panduan langkah demi langkah:
+
+Langkah 1: Mendapatkan Kredensial OAuth2 dari Google API Console
+Masuk ke Google Cloud Console:
+
+Buka Google Cloud Console.
+Buat atau Pilih Proyek:
+
+Pilih proyek yang ada atau buat proyek baru.
+Aktifkan Google Calendar API:
+
+Buka "Library" di menu API & Services.
+Cari "Google Calendar API" dan aktifkan.
+Buat Kredensial OAuth2:
+
+Buka "Credentials" di menu API & Services.
+Klik "Create Credentials" dan pilih "OAuth 2.0 Client IDs".
+Konfigurasikan layar persetujuan OAuth (OAuth consent screen) jika diminta.
+Pilih "Web application" sebagai tipe aplikasi.
+Masukkan nama aplikasi dan URL pengalihan (redirect URI) untuk aplikasi Anda.
+Redirect URI adalah: http://localhost:8080/login/oauth2/code/google
+Dapatkan Client ID dan Client Secret:
+
+Setelah kredensial dibuat, simpan Client ID dan Client Secret.
+Langkah 2: Menambahkan Dependensi di Spring Boot
+Tambahkan dependensi yang diperlukan di pom.xml:
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-client</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+Langkah 3: Konfigurasi application.properties
+Tambahkan konfigurasi OAuth2 di src/main/resources/application.properties:
+
+spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.scope=openid, profile, email, https://www.googleapis.com/auth/calendar.readonly
+spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/google
+spring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/auth
+spring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token
+spring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo
+spring.security.oauth2.client.provider.google.user-name-attribute=sub
+
+Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan dari Google Cloud Console.
+
+Langkah 4: Konfigurasi Spring Security
+Buat kelas konfigurasi Spring Security:
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .authorizeRequests(authorizeRequests ->
+                authorizeRequests
+                    .antMatchers("/", "/index.html").permitAll()
+                    .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2Login ->
+                oauth2Login
+                    .loginPage("/oauth2/authorization/google")
+            )
+            .logout(logout ->
+                logout
+                    .logoutSuccessHandler(oidcLogoutSuccessHandler())
+            );
+    }
+
+    @Bean
+    LogoutSuccessHandler oidcLogoutSuccessHandler() {
+        OidcClientInitiatedLogoutSuccessHandler successHandler =
+                new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository());
+        successHandler.setPostLogoutRedirectUri("http://localhost:8080/");
+        return successHandler;
+    }
+
+    @Bean
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        return new InMemoryClientRegistrationRepository(this.googleClientRegistration());
+    }
+
+    private ClientRegistration googleClientRegistration() {
+        return ClientRegistration.withRegistrationId("google")
+            .clientId("YOUR_CLIENT_ID")
+            .clientSecret("YOUR_CLIENT_SECRET")
+            .scope("openid", "profile", "email", "https://www.googleapis.com/auth/calendar.readonly")
+            .authorizationUri("https://accounts.google.com/o/oauth2/auth")
+            .tokenUri("https://oauth2.googleapis.com/token")
+            .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+            .userNameAttributeName(IdTokenClaimNames.SUB)
+            .clientName("Google")
+            .redirectUri("{baseUrl}/login/oauth2/code/google")
+            .build();
+    }
+}
+
+Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan dari Google Cloud Console.
+
+Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan dari Google Cloud Console.
+
+Langkah 5: Menambahkan Endpoints untuk Otentikasi dan Integrasi Google Calendar
+Tambahkan controller untuk mengelola otentikasi dan integrasi dengan Google Calendar:
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.security.Principal;
+import java.util.List;
+
+@Controller
+@RequestMapping("/api/meetings")
+public class MeetingRoomController {
+
+    @Autowired
+    private GoogleCalendarService googleCalendarService;
+
+    @GetMapping("/events")
+    public String getUpcomingEvents(Model model, OAuth2AuthenticationToken authentication) {
+        try {
+            List<Event> events = googleCalendarService.getUpcomingEvents();
+            model.addAttribute("events", events);
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+        return "events"; // View template for displaying events
+    }
+
+    @GetMapping("/user")
+    public String getUserInfo(Model model, Principal principal) {
+        model.addAttribute("user", principal);
+        return "user"; // View template for displaying user info
+    }
+}
+
+Buat tampilan (view) untuk menampilkan informasi acara dan pengguna.
+
+Langkah 6: Menjalankan Aplikasi
+Sekarang Anda dapat menjalankan aplikasi Spring Boot Anda dan mengakses endpoint /api/meetings/events untuk melihat acara dari Google Calendar pengguna yang telah terautentikasi.
+
+Menguji Aplikasi
+Buka browser dan arahkan ke http://localhost:8080.
+Klik tombol login untuk memulai proses otentikasi Google OAuth2.
+Setelah berhasil login, Anda akan diarahkan kembali ke aplikasi Anda, dan data acara dari Google Calendar akan ditampilkan.
+Dengan mengikuti langkah-langkah di atas, Anda dapat mengatur Google OAuth2 di aplikasi Spring Boot dan mengintegrasikan Google Calendar untuk keperluan booking ruang rapat.
+
+# Menggunakan 1 API saja
+Anda dapat menggabungkan dua logika API dalam satu permintaan (request) dengan beberapa cara. Salah satunya adalah dengan membuat endpoint khusus di backend yang menangani kedua logika tersebut sekaligus. Dalam konteks ini, Anda dapat membuat satu endpoint yang baik mengambil jadwal rapat yang akan datang dari Google Calendar dan kemudian, berdasarkan data tersebut, membuat booking rapat baru.
+
+Langkah 1: Membuat Endpoint Khusus di Backend
+Anda dapat membuat endpoint yang mengambil jadwal rapat dari Google Calendar dan kemudian membuat booking rapat baru berdasarkan logika tertentu.
+
+@RestController
+@RequestMapping("/api/meetings")
+public class MeetingRoomController {
+
+    @Autowired
+    private GoogleCalendarService googleCalendarService;
+
+    @PostMapping("/bookFromEvents")
+    public String bookMeetingFromEvents(@RequestBody BookingRequest bookingRequest) {
+        try {
+            // Ambil jadwal rapat yang akan datang dari Google Calendar
+            List<Event> upcomingEvents = googleCalendarService.getUpcomingEvents();
+
+            // Logika untuk memproses acara yang akan datang
+            // Misalnya, buat booking baru berdasarkan kondisi tertentu
+            Event newEvent = createBookingFromEvents(upcomingEvents, bookingRequest);
+
+            // Buat booking rapat baru di Google Calendar
+            return googleCalendarService.createEvent(newEvent);
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            return "Error processing booking from events";
+        }
+    }
+
+    private Event createBookingFromEvents(List<Event> upcomingEvents, BookingRequest bookingRequest) {
+        // Implementasikan logika Anda untuk membuat booking baru berdasarkan acara yang ada
+        // Misalnya, buat booking baru jika tidak ada acara pada waktu yang diminta
+        boolean isSlotAvailable = true;
+        for (Event event : upcomingEvents) {
+            if (event.getStart().getDateTime().isEqual(bookingRequest.getStart().getDateTime())) {
+                isSlotAvailable = false;
+                break;
+            }
+        }
+
+        if (isSlotAvailable) {
+            Event newEvent = new Event()
+                .setSummary(bookingRequest.getSummary())
+                .setLocation(bookingRequest.getLocation())
+                .setDescription(bookingRequest.getDescription())
+                .setStart(bookingRequest.getStart())
+                .setEnd(bookingRequest.getEnd());
+            return newEvent;
+        } else {
+            throw new RuntimeException("Slot not available");
+        }
+    }
+}
+
+Langkah 2: Struktur Data Request
+Definisikan kelas BookingRequest yang akan diterima oleh endpoint /bookFromEvents.
+
+```java
+import com.google.api.services.calendar.model.EventDateTime;
+
+public class BookingRequest {
+    private String summary;
+    private String location;
+    private String description;
+    private EventDateTime start;
+    private EventDateTime end;
+
+    // Getters and setters
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public EventDateTime getStart() {
+        return start;
+    }
+
+    public void setStart(EventDateTime start) {
+        this.start = start;
+    }
+
+    public EventDateTime getEnd() {
+        return end;
+    }
+
+    public void setEnd(EventDateTime end) {
+        this.end = end;
+    }
+}
+```
+Langkah 3: Mengirim Request dari Frontend
+Frontend mengirim request POST untuk membuat booking berdasarkan jadwal yang ada
+
+```javascript
+import axios from 'axios';
+
+async function bookMeetingFromEvents() {
+    const bookingRequest = {
+        summary: "Team Meeting",
+        location: "Room 101",
+        description: "Discussing project status",
+        start: {
+            dateTime: "2024-07-10T10:00:00-07:00",
+            timeZone: "America/Los_Angeles"
+        },
+        end: {
+            dateTime: "2024-07-10T11:00:00-07:00",
+            timeZone: "America/Los_Angeles"
+        }
+    };
+
+    try {
+        const response = await axios.post('/api/meetings/bookFromEvents', bookingRequest);
+        const bookingLink = response.data;
+        console.log('Meeting room booked successfully:', bookingLink);
+    } catch (error) {
+        console.error('Error booking meeting room:', error);
+    }
+}
+
+// Panggil fungsi ini saat pengguna mengklik tombol untuk membuat booking
+bookMeetingFromEvents();
+```
+
+
