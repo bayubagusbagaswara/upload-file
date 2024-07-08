@@ -321,6 +321,7 @@ Tambahkan dependensi yang diperlukan di pom.xml:
 Langkah 3: Konfigurasi application.properties
 Tambahkan konfigurasi OAuth2 di src/main/resources/application.properties:
 
+```bash
 spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
 spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
 spring.security.oauth2.client.registration.google.scope=openid, profile, email, https://www.googleapis.com/auth/calendar.readonly
@@ -329,6 +330,7 @@ spring.security.oauth2.client.provider.google.authorization-uri=https://accounts
 spring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token
 spring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo
 spring.security.oauth2.client.provider.google.user-name-attribute=sub
+```
 
 Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan dari Google Cloud Console.
 
