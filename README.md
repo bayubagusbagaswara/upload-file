@@ -47,6 +47,7 @@ Melalui kenaikan suku bunga BI tentu akan membawa dampak pada perekonomian dan m
 
 # Booking Meeting Room
 
+```bash
 <dependency>
   <groupId>com.google.api-client</groupId>
   <artifactId>google-api-client</artifactId>
@@ -62,8 +63,11 @@ Melalui kenaikan suku bunga BI tentu akan membawa dampak pada perekonomian dan m
   <artifactId>google-api-services-calendar</artifactId>
   <version>v3-rev305-1.25.0</version>
 </dependency>
+```
 
-Buat file konfigurasi application.properties atau application.yml dengan detail OAuth2
+Buat file konfigurasi application.properties atau application.yml dengan detail OAuth2:
+
+```bash
 spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
 spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
 spring.security.oauth2.client.registration.google.scope=openid, profile, email, https://www.googleapis.com/auth/calendar
@@ -71,8 +75,11 @@ spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/o
 spring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/auth
 spring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token
 spring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo
+```
 
 Buat service yang akan mengatur integrasi dengan Google Calendar:
+
+```java
 @Service
 public class GoogleCalendarService {
     private static final String APPLICATION_NAME = "Google Calendar API Spring Boot";
@@ -125,8 +132,11 @@ public class GoogleCalendarService {
         return event.getHtmlLink();
     }
 }
+```
 
 Buat controller yang akan menangani permintaan untuk mengambil jadwal dari Google Calendar dan membuat booking:
+
+```java
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -161,6 +171,7 @@ public class MeetingRoomController {
         }
     }
 }
+```
 
 Jalankan aplikasi Spring Boot Anda.
 
@@ -168,6 +179,7 @@ Lakukan request untuk mengambil jadwal dari Google Calendar melalui endpoint /ap
 
 Lakukan request untuk booking ruang rapat melalui endpoint /api/meetings/book dengan body JSON yang sesuai:
 
+```bash
 {
   "summary": "Team Meeting",
   "location": "Room 101",
@@ -181,6 +193,7 @@ Lakukan request untuk booking ruang rapat melalui endpoint /api/meetings/book de
     "timeZone": "America/Los_Angeles"
   }
 }
+```
 
 Dengan mengikuti langkah-langkah di atas, Anda dapat membuat API Spring Boot yang terintegrasi dengan Google Calendar untuk mengambil jadwal dan membuat booking berdasarkan data tersebut. Pastikan Anda menyesuaikan konfigurasi dan kode sesuai dengan kebutuhan spesifik aplikasi Anda.
 
@@ -188,6 +201,7 @@ Dengan mengikuti langkah-langkah di atas, Anda dapat membuat API Spring Boot yan
 
 Fungsi getUpcomingEvents() dalam kode di atas berfungsi untuk mengambil daftar acara (events) yang akan datang dari Google Calendar pengguna. Berikut adalah penjelasan lebih rinci mengenai fungsi tersebut:
 
+```java
 public List<Event> getUpcomingEvents() throws IOException, GeneralSecurityException {
     // Membuat instance Google Calendar service menggunakan kredensial yang didapatkan
     Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, getCredentials())
@@ -204,7 +218,7 @@ public List<Event> getUpcomingEvents() throws IOException, GeneralSecurityExcept
     // Mengembalikan daftar acara
     return events.getItems();
 }
-
+```
 Langkah-langkah yang Dilakukan oleh getUpcomingEvents()
 Membuat Instance Google Calendar Service:
 
@@ -238,6 +252,7 @@ Fungsi ini memberikan integrasi yang lebih baik dengan Google Calendar, memungki
 Contoh Penggunaan di Controller
 Fungsi ini digunakan di controller untuk menangani permintaan HTTP GET untuk mendapatkan jadwal acara yang akan datang:
 
+```java
 @RestController
 @RequestMapping("/api/meetings")
 public class MeetingRoomController {
@@ -255,6 +270,7 @@ public class MeetingRoomController {
         }
     }
 }
+```
 
 Endpoint /api/meetings/events dapat dipanggil oleh klien (misalnya, aplikasi web atau mobile) untuk mendapatkan daftar acara yang akan datang dari Google Calendar pengguna.
 
@@ -287,6 +303,7 @@ Setelah kredensial dibuat, simpan Client ID dan Client Secret.
 Langkah 2: Menambahkan Dependensi di Spring Boot
 Tambahkan dependensi yang diperlukan di pom.xml:
 
+```bash
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-oauth2-client</artifactId>
@@ -299,6 +316,7 @@ Tambahkan dependensi yang diperlukan di pom.xml:
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-web</artifactId>
 </dependency>
+```
 
 Langkah 3: Konfigurasi application.properties
 Tambahkan konfigurasi OAuth2 di src/main/resources/application.properties:
@@ -317,6 +335,7 @@ Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan d
 Langkah 4: Konfigurasi Spring Security
 Buat kelas konfigurasi Spring Security:
 
+```java
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -373,6 +392,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .build();
     }
 }
+```
 
 Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan dari Google Cloud Console.
 
@@ -381,6 +401,7 @@ Gantilah YOUR_CLIENT_ID dan YOUR_CLIENT_SECRET dengan nilai yang Anda dapatkan d
 Langkah 5: Menambahkan Endpoints untuk Otentikasi dan Integrasi Google Calendar
 Tambahkan controller untuk mengelola otentikasi dan integrasi dengan Google Calendar:
 
+```java
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -415,6 +436,7 @@ public class MeetingRoomController {
         return "user"; // View template for displaying user info
     }
 }
+```
 
 Buat tampilan (view) untuk menampilkan informasi acara dan pengguna.
 
@@ -433,6 +455,7 @@ Anda dapat menggabungkan dua logika API dalam satu permintaan (request) dengan b
 Langkah 1: Membuat Endpoint Khusus di Backend
 Anda dapat membuat endpoint yang mengambil jadwal rapat dari Google Calendar dan kemudian membuat booking rapat baru berdasarkan logika tertentu.
 
+```java
 @RestController
 @RequestMapping("/api/meetings")
 public class MeetingRoomController {
@@ -482,6 +505,7 @@ public class MeetingRoomController {
         }
     }
 }
+```
 
 Langkah 2: Struktur Data Request
 Definisikan kelas BookingRequest yang akan diterima oleh endpoint /bookFromEvents.
