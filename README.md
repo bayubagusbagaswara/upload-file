@@ -126,4 +126,60 @@ public class GoogleCalendarService {
     }
 }
 
+Buat controller yang akan menangani permintaan untuk mengambil jadwal dari Google Calendar dan membuat booking:
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/meetings")
+public class MeetingRoomController {
+
+    @Autowired
+    private GoogleCalendarService googleCalendarService;
+
+    @GetMapping("/events")
+    public List<Event> getUpcomingEvents() {
+        try {
+            return googleCalendarService.getUpcomingEvents();
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    @PostMapping("/book")
+    public String bookMeetingRoom(@RequestBody Event event) {
+        try {
+            return googleCalendarService.createEvent(event);
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            return "Error booking meeting room";
+        }
+    }
+}
+
+Jalankan aplikasi Spring Boot Anda.
+
+Lakukan request untuk mengambil jadwal dari Google Calendar melalui endpoint /api/meetings/events.
+
+Lakukan request untuk booking ruang rapat melalui endpoint /api/meetings/book dengan body JSON yang sesuai:
+
+{
+  "summary": "Team Meeting",
+  "location": "Room 101",
+  "description": "Discussing project status",
+  "start": {
+    "dateTime": "2024-07-10T10:00:00-07:00",
+    "timeZone": "America/Los_Angeles"
+  },
+  "end": {
+    "dateTime": "2024-07-10T11:00:00-07:00",
+    "timeZone": "America/Los_Angeles"
+  }
+}
+
+Dengan mengikuti langkah-langkah di atas, Anda dapat membuat API Spring Boot yang terintegrasi dengan Google Calendar untuk mengambil jadwal dan membuat booking berdasarkan data tersebut. Pastikan Anda menyesuaikan konfigurasi dan kode sesuai dengan kebutuhan spesifik aplikasi Anda.
