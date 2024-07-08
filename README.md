@@ -183,3 +183,77 @@ Lakukan request untuk booking ruang rapat melalui endpoint /api/meetings/book de
 }
 
 Dengan mengikuti langkah-langkah di atas, Anda dapat membuat API Spring Boot yang terintegrasi dengan Google Calendar untuk mengambil jadwal dan membuat booking berdasarkan data tersebut. Pastikan Anda menyesuaikan konfigurasi dan kode sesuai dengan kebutuhan spesifik aplikasi Anda.
+
+# Function getUpcomingEvents()
+
+Fungsi getUpcomingEvents() dalam kode di atas berfungsi untuk mengambil daftar acara (events) yang akan datang dari Google Calendar pengguna. Berikut adalah penjelasan lebih rinci mengenai fungsi tersebut:
+
+public List<Event> getUpcomingEvents() throws IOException, GeneralSecurityException {
+    // Membuat instance Google Calendar service menggunakan kredensial yang didapatkan
+    Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, getCredentials())
+            .setApplicationName(APPLICATION_NAME)
+            .build();
+
+    // Mengambil daftar acara dari kalender utama (primary)
+    Events events = service.events().list("primary")
+            .setMaxResults(10) // Menetapkan jumlah maksimum acara yang akan diambil (10 acara)
+            .setOrderBy("startTime") // Mengurutkan acara berdasarkan waktu mulai
+            .setSingleEvents(true) // Mengatur untuk hanya mengambil acara tunggal, bukan berulang
+            .execute();
+    
+    // Mengembalikan daftar acara
+    return events.getItems();
+}
+
+Langkah-langkah yang Dilakukan oleh getUpcomingEvents()
+Membuat Instance Google Calendar Service:
+
+Menggunakan GoogleNetHttpTransport.newTrustedTransport() untuk membuat transport HTTP yang aman.
+Menggunakan JSON_FACTORY untuk menangani format JSON.
+Menggunakan kredensial yang didapatkan dari fungsi getCredentials() untuk mengotorisasi akses ke Google Calendar.
+Mengambil Daftar Acara:
+
+Memanggil metode events().list("primary") untuk mengambil daftar acara dari kalender utama (primary) pengguna.
+Menggunakan beberapa parameter untuk mengatur hasil yang diambil:
+setMaxResults(10): Mengatur jumlah maksimum acara yang akan diambil sebanyak 10.
+setOrderBy("startTime"): Mengurutkan acara berdasarkan waktu mulai.
+setSingleEvents(true): Mengatur untuk hanya mengambil acara tunggal, bukan acara berulang (recurring events).
+Mengembalikan Daftar Acara:
+
+Memanggil execute() untuk mengeksekusi permintaan dan mendapatkan daftar acara.
+Mengembalikan daftar acara yang diambil (events.getItems()).
+Kegunaan Fungsi getUpcomingEvents()
+Fungsi getUpcomingEvents() sangat berguna dalam konteks aplikasi booking ruang rapat karena:
+
+Menampilkan Jadwal Pengguna:
+
+Fungsi ini memungkinkan aplikasi untuk menampilkan jadwal rapat pengguna yang sudah ada di Google Calendar.
+Menghindari Konflik Jadwal:
+
+Dengan mengetahui jadwal rapat yang sudah ada, aplikasi dapat menghindari booking ruang rapat pada waktu yang sudah terjadwal, sehingga menghindari konflik jadwal.
+Integrasi yang Lebih Baik dengan Google Calendar:
+
+Fungsi ini memberikan integrasi yang lebih baik dengan Google Calendar, memungkinkan aplikasi untuk sinkronisasi dengan jadwal pengguna secara real-time.
+
+Contoh Penggunaan di Controller
+Fungsi ini digunakan di controller untuk menangani permintaan HTTP GET untuk mendapatkan jadwal acara yang akan datang:
+
+@RestController
+@RequestMapping("/api/meetings")
+public class MeetingRoomController {
+
+    @Autowired
+    private GoogleCalendarService googleCalendarService;
+
+    @GetMapping("/events")
+    public List<Event> getUpcomingEvents() {
+        try {
+            return googleCalendarService.getUpcomingEvents();
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+}
+
+Endpoint /api/meetings/events dapat dipanggil oleh klien (misalnya, aplikasi web atau mobile) untuk mendapatkan daftar acara yang akan datang dari Google Calendar pengguna.
